@@ -1,0 +1,74 @@
+# Создание искусственного интеллекта на Python
+# Классификатор тональности текста (пошаговое руководство)
+
+# Импортируем необходимые библиотеки
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+import pandas as pd
+import numpy as np
+import joblib # Для загрузки сохраненной модели
+
+# --- Загрузка сохраненной модели и векторизатора ---
+# Предполагается, что файлы 'sentiment_model.pkl' и 'tfidf_vectorizer.pkl'
+# находятся в той же папке, что и этот скрипт.
+
+try:
+    model = joblib.load('sentiment_model.pkl')
+    vectorizer = joblib.load('tfidf_vectorizer.pkl')
+    print("Модель и векторизатор успешно загружены.")
+except FileNotFoundError:
+    print("Ошибка: Файлы модели ('sentiment_model.pkl') или векторизатора ('tfidf_vectorizer.pkl') не найдены.")
+    print("Пожалуйста, сначала обучите и сохраните модель, запустив скрипт обучения.")
+    exit() # Завершаем программу, если файлы не найдены
+except Exception as e:
+    print(f"Произошла ошибка при загрузке модели или векторизатора: {e}")
+    exit()
+
+# --- Функция для предсказания тональности нового текста ---
+def predict_sentiment_from_user_input():
+    """
+    Запрашивает у пользователя текст, предсказывает его тональность
+    и выводит результат.
+    """
+    user_text = input("Введите текст для анализа тональности (или 'выход' для завершения): ")
+
+    if user_text.lower() == 'выход':
+        return False # Сигнал для завершения программы
+
+    if not user_text.strip(): # Проверяем, что ввод не пустой
+        print("Вы ничего не ввели. Пожалуйста, введите текст.")
+        return True # Продолжаем работу
+
+    try:
+        # Преобразуем новый текст в вектор, используя загруженный векторизатор
+        text_vector = vectorizer.transform([user_text])
+        # Предсказываем класс
+        prediction = model.predict(text_vector)
+
+        # Определяем тональность на основе предсказания
+        sentiment = "Позитивный" if prediction[0] == 1 else "Негативный"
+
+        print(f"Текст: '{user_text}'")
+        print(f"Тональность: {sentiment}")
+        print("-" * 30) # Разделитель для красоты
+
+    except Exception as e:
+        print(f"Произошла ошибка при анализе текста: {e}")
+
+    return True # Продолжаем работу
+
+
+# --- Основная часть программы ---
+print("\n--- Анализатор тональности текста ---")
+print("Введите текст, и программа определит его тональность.")
+print("Для выхода введите 'выход'.")
+print("-" * 30)
+
+# Запускаем цикл, чтобы пользователь мог вводить несколько текстов
+while True:
+    if not predict_sentiment_from_user_input():
+        break # Если функция вернула False (пользователь ввел 'выход'), выходим из цикла
+
+print("\nРабота программы завершена.")
